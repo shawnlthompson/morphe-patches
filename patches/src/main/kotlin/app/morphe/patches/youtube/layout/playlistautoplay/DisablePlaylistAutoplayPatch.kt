@@ -10,17 +10,38 @@ package app.morphe.patches.youtube.layout.playlistautoplay
 import app.morphe.patcher.Fingerprint
 import app.morphe.patcher.extensions.InstructionExtensions.addInstructionsWithLabels
 import app.morphe.patcher.patch.bytecodePatch
+import app.morphe.patcher.patch.resourcePatch
 import app.morphe.patches.all.misc.resources.resourceMappingPatch
 import app.morphe.patches.shared.misc.settings.preference.SwitchPreference
+import app.morphe.patches.youtube.layout.player.buttons.addPlayerBottomButton
+import app.morphe.patches.youtube.layout.player.buttons.playerOverlayButtonsHookPatch
 import app.morphe.patches.youtube.misc.extension.sharedExtensionPatch
 import app.morphe.patches.youtube.misc.settings.PreferenceScreen
 import app.morphe.patches.youtube.misc.settings.settingsPatch
 import app.morphe.patches.youtube.shared.Constants.COMPATIBILITY_YOUTUBE
+import app.morphe.util.ResourceGroup
+import app.morphe.util.copyResources
 import app.morphe.util.findFreeRegister
 import com.android.tools.smali.dexlib2.AccessFlags
 
 private const val EXTENSION_CLASS =
     "Lapp/morphe/extension/youtube/patches/DisablePlaylistAutoplayPatch;"
+
+private const val EXTENSION_BUTTON =
+    "Lapp/morphe/extension/youtube/videoplayer/PlaylistAutoplayButton;"
+
+private val playlistAutoplayButtonResourcePatch = resourcePatch {
+    execute {
+        copyResources(
+            "playlistautoplaybutton",
+            ResourceGroup(
+                "drawable",
+                "morphe_playlist_autoplay_on_bold.xml",
+                "morphe_playlist_autoplay_off_bold.xml"
+            )
+        )
+    }
+}
 
 @Suppress("unused")
 val disablePlaylistAutoplayPatch = bytecodePatch(
@@ -31,6 +52,8 @@ val disablePlaylistAutoplayPatch = bytecodePatch(
         sharedExtensionPatch,
         settingsPatch,
         resourceMappingPatch,
+        playerOverlayButtonsHookPatch,
+        playlistAutoplayButtonResourcePatch,
     )
 
     compatibleWith(COMPATIBILITY_YOUTUBE)
@@ -39,6 +62,9 @@ val disablePlaylistAutoplayPatch = bytecodePatch(
         PreferenceScreen.PLAYER.addPreferences(
             SwitchPreference("morphe_disable_playlist_autoplay", summary = true)
         )
+
+        // Always show a one-tap overlay toggle for the existing playlist-autoplay state.
+        addPlayerBottomButton(EXTENSION_BUTTON)
 
         val enumType = NavigationIntentEnumFingerprint.originalClassDef.type
 
