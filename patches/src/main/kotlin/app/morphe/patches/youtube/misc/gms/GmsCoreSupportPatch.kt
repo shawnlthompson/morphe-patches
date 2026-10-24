@@ -29,6 +29,7 @@ val gmsCoreSupportPatch = gmsCoreSupportPatch(
         sharedExtensionPatch,
         hidePlayerOverlayButtonsPatch, // Hide non-functional cast button.
         spoofVideoStreamsPatch,
+        deviceComplianceCheckPatch,
     )
 
     compatibleWith(COMPATIBILITY_YOUTUBE)
