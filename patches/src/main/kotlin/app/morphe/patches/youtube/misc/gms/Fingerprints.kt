@@ -4,6 +4,7 @@ import app.morphe.patcher.Fingerprint
 import app.morphe.patcher.InstructionLocation.MatchAfterImmediately
 import app.morphe.patcher.methodCall
 import app.morphe.patcher.opcode
+import app.morphe.patcher.string
 import app.morphe.patches.all.misc.resources.ResourceType
 import app.morphe.patches.all.misc.resources.resourceLiteral
 import com.android.tools.smali.dexlib2.AccessFlags
@@ -17,5 +18,22 @@ internal object SpecificNetworkErrorViewControllerFingerprint : Fingerprint(
         resourceLiteral(ResourceType.STRING, "offline_no_content_body_text_not_offline_eligible"),
         methodCall(name = "getString", returnType = "Ljava/lang/String;"),
         opcode(Opcode.MOVE_RESULT_OBJECT, location = MatchAfterImmediately())
+    )
+)
+
+internal object GmsDeviceComplianceCheckFingerprint : Fingerprint(
+    accessFlags = listOf(AccessFlags.PUBLIC, AccessFlags.FINAL),
+    returnType = "V",
+    parameters = listOf("L"), // Rx single emitter.
+    filters = listOf(
+        string("failsafe_enable_gms_device_compliance_check"),
+        // GServices lookup of the flag above.
+        methodCall(parameters = listOf("Ljava/lang/String;"), returnType = "Z"),
+        // Emits false and returns when the check is turned off.
+        methodCall(
+            parameters = listOf("Ljava/lang/Object;"),
+            returnType = "V",
+            opcode = Opcode.INVOKE_VIRTUAL
+        )
     )
 )
